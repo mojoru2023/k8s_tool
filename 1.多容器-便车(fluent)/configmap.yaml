@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-web
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: logger-123
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - >
+        while true;
+        do 
+         echo "i mojoru cnf" >> /ckad/log/input.log;
+         sleep 10;
+        done
+       volumeMounts:
+       - name: log
+         mountPath: /ckad/log
+
+      - name: adopter-dev
+        image: fluent/fluentd
+        volumeMounts:
+        - name: log
+          mountPath: /ckad/log
+        - name: fluentd-config
+          mountPath: /fluentd/etc
