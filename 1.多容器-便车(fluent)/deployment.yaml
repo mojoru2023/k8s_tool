@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-web
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: logger-123
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - >
+          while true; do echo "i abc cnf"  >> /ckad/log/input.log; sleep 10; done
+        volumeMounts:
+        - name: log
+          mountPath: /ckad/log
+      - name: adopter-dev
+        image: fluent/fluentd # 修正为 fluentd 镜像
+        volumeMounts:
+        - name: log
+          mountPath: /ckad/log
+        - name: fluentd-config
+          mountPath: /fluentd/etc # 确保路径正确
+      volumes:
+      - name: log
+        emptyDir: {}
+      - name: fluentd-config
+        configMap:
+          name: fluentd-config # 确保 configMap 存在并正确配置
