@@ -1,0 +1,69 @@
+
+# deployment- service
+# deployment的containerPort与service的targetPort 保持一致
+# deployment的labels与service的selector保持一致
+
+# service 与Ingress
+# service的port与ingress的port number保持一致
+# service的name 与ingress中的service的name保持一致
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dm
+  namespace: ingress-ckad
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: nginx-ing
+  template:
+    metadata:
+      labels:
+        name: nginx-ing
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 81
+
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ing-svc
+  namespace: ingress-ckad
+spec:
+  ports:
+  - port: 80 
+    targetPort:  81
+    protocol: TCP
+  selector:
+    name: nginx-ing
+--- 
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress-test
+  namespace: ingress-ckad
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-taget: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /hello 
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-ing-svc
+            port: 
+              number: 80 
+
